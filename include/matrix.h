@@ -16,4 +16,5 @@ Matrix matrix_transpose(Matrix m);
 // Вспомогательные функции
 void print_matrix(Matrix m);
 Matrix matrix_from_array(double* data, int rows, int cols);
+double matrix_sum(Matrix m);
 Matrix matrix_hstack(Matrix a, Matrix b);

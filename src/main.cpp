@@ -32,9 +32,8 @@ print_matrix(A);
         print_matrix(E);
 
         // Тестируем индивидуальное задание - сумму элементов
-        Matrix total = matrix_hstack(A, B);
-        std::cout << "\nSum of all elements in matrix A: " << std::endl;
-        print_matrix(total);
+        double total_sum = matrix_sum(A);
+        std::cout << "\nSum of all elements in matrix A: " << total_sum << std::endl;
 
         // Освобождаем память (КАЖДУЮ МАТРИЦУ ТОЛЬКО ОДИН РАЗ!)
         free_matrix(A);

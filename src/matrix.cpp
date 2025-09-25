@@ -113,17 +113,43 @@ Matrix matrix_from_array(double *data, int rows, int cols)
     }
     return result;
 }
-Matrix matrix_hstack(Matrix a, Matrix b){
-    int count=0, row_need=0;
-    for (int i=0;i<a.rows;++i){
-        count=0;
-        for (int j=0;j<a.cols;++j){
-            if (a.data[i][j] == b.data[i][j]){
+
+double matrix_sum(Matrix m)
+{
+    // Проверка на пустую матрицу
+    if (m.data == nullptr || m.rows <= 0 || m.cols <= 0)
+    {
+        return 0.0;
+    }
+    double sum = 0.0;
+    // Суммируем все элементы матрицы
+    for (int i = 0; i < m.rows; i++)
+    {
+        for (int j = 0; j < m.cols; j++)
+        {
+            sum += m.data[i][j];
+        }
+    }
+    return sum;
+}
+
+Matrix matrix_hstack(Matrix a, Matrix b)
+{
+    int count = 0, row_need = 0;
+    for (int i = 0; i < a.rows; ++i)
+    {
+        count = 0;
+        for (int j = 0; j < a.cols; ++j)
+        {
+            if (a.data[i][j] == b.data[i][j])
+            {
                 count++;
             }
         }
-        if (count == a.cols){
-            row_need=i;break;
+        if (count == a.cols)
+        {
+            row_need = i;
+            break;
         }
     }
     Matrix result = create_matrix(a.cols, a.rows);
@@ -131,10 +157,12 @@ Matrix matrix_hstack(Matrix a, Matrix b){
     {
         for (int j = 0; j < a.cols; j++)
         {
-            if (i!=row_need){
+            if (i != row_need)
+            {
                 result.data[j][i] = a.data[i][j] + b.data[i][j];
             }
-            else{
+            else
+            {
                 result.data[j][i] = a.data[i][j];
             }
         }
