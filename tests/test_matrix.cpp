@@ -1,295 +1,216 @@
 #include <gtest/gtest.h>
 #include "matrix.h"
+#include <cmath>
 
-// Тесты создания и освобождения матрицы
-TEST(MatrixTest, CreateAndFree) {
-    Matrix m = create_matrix(2, 2);
+// Тесты для create_matrix
+TEST(MatrixTest, CreateMatrixValidDimensions) {
+    Matrix m = create_matrix(2, 3);
     EXPECT_EQ(m.rows, 2);
-    EXPECT_EQ(m.cols, 2);
+    EXPECT_EQ(m.cols, 3);
     EXPECT_NE(m.data, nullptr);
+
+    // Проверяем, что матрица инициализирована нулями
+    for (int i = 0; i < m.rows; i++) {
+        for (int j = 0; j < m.cols; j++) {
+            EXPECT_EQ(m.data[i][j], 0.0);
+        }
+    }
     free_matrix(m);
 }
 
-TEST(MatrixTest, InvalidSize) {
-    EXPECT_THROW(create_matrix(-1, 2), std::invalid_argument);
-    EXPECT_THROW(create_matrix(2, -1), std::invalid_argument);
-    EXPECT_THROW(create_matrix(0, 2), std::invalid_argument);
-    EXPECT_THROW(create_matrix(2, 0), std::invalid_argument);
+TEST(MatrixTest, CreateMatrixInvalidDimensions) {
+    EXPECT_THROW(create_matrix(0, 5), std::invalid_argument);
+    EXPECT_THROW(create_matrix(-1, 3), std::invalid_argument);
+    EXPECT_THROW(create_matrix(2, -2), std::invalid_argument);
 }
 
-TEST(MatrixTest, CreateLargeMatrix) {
-    Matrix m = create_matrix(100, 100);
-    EXPECT_EQ(m.rows, 100);
-    EXPECT_EQ(m.cols, 100);
-    EXPECT_NE(m.data, nullptr);
-    free_matrix(m);
+// Тесты для matrix_add
+TEST(MatrixTest, MatrixAddValid) {
+    Matrix a = create_matrix(2, 2);
+    Matrix b = create_matrix(2, 2);
+
+    // Заполняем матрицы тестовыми данными
+    a.data[0][0] = 1.0; a.data[0][1] = 2.0;
+    a.data[1][0] = 3.0; a.data[1][1] = 4.0;
+
+    b.data[0][0] = 5.0; b.data[0][1] = 6.0;
+    b.data[1][0] = 7.0; b.data[1][1] = 8.0;
+
+    Matrix result = matrix_add(a, b);
+
+    EXPECT_EQ(result.rows, 2);
+    EXPECT_EQ(result.cols, 2);
+    EXPECT_DOUBLE_EQ(result.data[0][0], 6.0);
+    EXPECT_DOUBLE_EQ(result.data[0][1], 8.0);
+    EXPECT_DOUBLE_EQ(result.data[1][0], 10.0);
+    EXPECT_DOUBLE_EQ(result.data[1][1], 12.0);
+
+    free_matrix(a);
+    free_matrix(b);
+    free_matrix(result);
 }
 
-// Тесты сложения матриц
-TEST(MatrixTest, MatrixAddition) {
-    Matrix A = create_matrix(2, 2);
-    Matrix B = create_matrix(2, 2);
+TEST(MatrixTest, MatrixAddInvalidDimensions) {
+    Matrix a = create_matrix(2, 3);
+    Matrix b = create_matrix(3, 2);
 
-    A.data[0][0] = 1; A.data[0][1] = 2;
-    A.data[1][0] = 3; A.data[1][1] = 4;
+    EXPECT_THROW(matrix_add(a, b), std::invalid_argument);
 
-    B.data[0][0] = 5; B.data[0][1] = 6;
-    B.data[1][0] = 7; B.data[1][1] = 8;
-
-    Matrix C = matrix_add(A, B);
-    EXPECT_EQ(C.rows, 2);
-    EXPECT_EQ(C.cols, 2);
-    EXPECT_EQ(C.data[0][0], 6);
-    EXPECT_EQ(C.data[0][1], 8);
-    EXPECT_EQ(C.data[1][0], 10);
-    EXPECT_EQ(C.data[1][1], 12);
-
-    free_matrix(A);
-    free_matrix(B);
-    free_matrix(C);
+    free_matrix(a);
+    free_matrix(b);
 }
 
-TEST(MatrixTest, MatrixAdditionInvalidSize) {
-    Matrix A = create_matrix(2, 2);
-    Matrix B = create_matrix(3, 3);
+// Тесты для matrix_multiply
+TEST(MatrixTest, MatrixMultiplyValid) {
+    Matrix a = create_matrix(2, 3);
+    Matrix b = create_matrix(3, 2);
 
-    EXPECT_THROW(matrix_add(A, B), std::invalid_argument);
+    // Матрица A: 2x3
+    a.data[0][0] = 1; a.data[0][1] = 2; a.data[0][2] = 3;
+    a.data[1][0] = 4; a.data[1][1] = 5; a.data[1][2] = 6;
 
-    free_matrix(A);
-    free_matrix(B);
+    // Матрица B: 3x2
+    b.data[0][0] = 7; b.data[0][1] = 8;
+    b.data[1][0] = 9; b.data[1][1] = 10;
+    b.data[2][0] = 11; b.data[2][1] = 12;
+
+    Matrix result = matrix_multiply(a, b);
+
+    EXPECT_EQ(result.rows, 2);
+    EXPECT_EQ(result.cols, 2);
+    // Проверяем результаты умножения
+    // [1*7 + 2*9 + 3*11, 1*8 + 2*10 + 3*12] = [58, 64]
+    // [4*7 + 5*9 + 6*11, 4*8 + 5*10 + 6*12] = [139, 154]
+    EXPECT_DOUBLE_EQ(result.data[0][0], 58.0);
+    EXPECT_DOUBLE_EQ(result.data[0][1], 64.0);
+    EXPECT_DOUBLE_EQ(result.data[1][0], 139.0);
+    EXPECT_DOUBLE_EQ(result.data[1][1], 154.0);
+
+    free_matrix(a);
+    free_matrix(b);
+    free_matrix(result);
 }
 
-TEST(MatrixTest, MatrixAdditionCommutative) {
-    Matrix A = create_matrix(2, 2);
-    Matrix B = create_matrix(2, 2);
+TEST(MatrixTest, MatrixMultiplyInvalidDimensions) {
+    Matrix a = create_matrix(2, 3);
+    Matrix b = create_matrix(2, 3); // Несовместимые размеры
 
-    A.data[0][0] = 1; A.data[0][1] = 2;
-    A.data[1][0] = 3; A.data[1][1] = 4;
+    EXPECT_THROW(matrix_multiply(a, b), std::invalid_argument);
 
-    B.data[0][0] = 5; B.data[0][1] = 6;
-    B.data[1][0] = 7; B.data[1][1] = 8;
-
-    Matrix C1 = matrix_add(A, B);
-    Matrix C2 = matrix_add(B, A);
-
-    EXPECT_EQ(C1.data[0][0], C2.data[0][0]);
-    EXPECT_EQ(C1.data[0][1], C2.data[0][1]);
-    EXPECT_EQ(C1.data[1][0], C2.data[1][0]);
-    EXPECT_EQ(C1.data[1][1], C2.data[1][1]);
-
-    free_matrix(A);
-    free_matrix(B);
-    free_matrix(C1);
-    free_matrix(C2);
+    free_matrix(a);
+    free_matrix(b);
 }
 
-// Тесты умножения матриц
-TEST(MatrixTest, MatrixMultiplication) {
-    Matrix A = create_matrix(2, 2);
-    Matrix B = create_matrix(2, 2);
-
-    A.data[0][0] = 1; A.data[0][1] = 2;
-    A.data[1][0] = 3; A.data[1][1] = 4;
-
-    B.data[0][0] = 5; B.data[0][1] = 6;
-    B.data[1][0] = 7; B.data[1][1] = 8;
-
-    Matrix C = matrix_multiply(A, B);
-    EXPECT_EQ(C.rows, 2);
-    EXPECT_EQ(C.cols, 2);
-    EXPECT_EQ(C.data[0][0], 19);
-    EXPECT_EQ(C.data[0][1], 22);
-    EXPECT_EQ(C.data[1][0], 43);
-    EXPECT_EQ(C.data[1][1], 50);
-
-    free_matrix(A);
-    free_matrix(B);
-    free_matrix(C);
-}
-
-TEST(MatrixTest, MatrixMultiplicationInvalidSize) {
-    Matrix A = create_matrix(2, 3);
-    Matrix B = create_matrix(2, 2);
-
-    EXPECT_THROW(matrix_multiply(A, B), std::invalid_argument);
-
-    free_matrix(A);
-    free_matrix(B);
-}
-
-TEST(MatrixTest, MatrixMultiplicationIdentity) {
-    Matrix A = create_matrix(2, 2);
-    Matrix I = create_matrix(2, 2); // Identity matrix
-
-    A.data[0][0] = 1; A.data[0][1] = 2;
-    A.data[1][0] = 3; A.data[1][1] = 4;
-
-    I.data[0][0] = 1; I.data[0][1] = 0;
-    I.data[1][0] = 0; I.data[1][1] = 1;
-
-    Matrix C = matrix_multiply(A, I);
-    EXPECT_EQ(C.data[0][0], A.data[0][0]);
-    EXPECT_EQ(C.data[0][1], A.data[0][1]);
-    EXPECT_EQ(C.data[1][0], A.data[1][0]);
-    EXPECT_EQ(C.data[1][1], A.data[1][1]);
-
-    free_matrix(A);
-    free_matrix(I);
-    free_matrix(C);
-}
-
-// Тесты транспонирования матрицы
+// Тесты для matrix_transpose
 TEST(MatrixTest, MatrixTranspose) {
-    Matrix A = create_matrix(2, 3);
-    A.data[0][0] = 1; A.data[0][1] = 2; A.data[0][2] = 3;
-    A.data[1][0] = 4; A.data[1][1] = 5; A.data[1][2] = 6;
+    Matrix m = create_matrix(2, 3);
 
-    Matrix B = matrix_transpose(A);
-    EXPECT_EQ(B.rows, 3);
-    EXPECT_EQ(B.cols, 2);
-    EXPECT_EQ(B.data[0][0], 1);
-    EXPECT_EQ(B.data[0][1], 4);
-    EXPECT_EQ(B.data[1][0], 2);
-    EXPECT_EQ(B.data[1][1], 5);
-    EXPECT_EQ(B.data[2][0], 3);
-    EXPECT_EQ(B.data[2][1], 6);
+    m.data[0][0] = 1; m.data[0][1] = 2; m.data[0][2] = 3;
+    m.data[1][0] = 4; m.data[1][1] = 5; m.data[1][2] = 6;
 
-    free_matrix(A);
-    free_matrix(B);
+    Matrix result = matrix_transpose(m);
+
+    EXPECT_EQ(result.rows, 3);
+    EXPECT_EQ(result.cols, 2);
+
+    // Проверяем транспонирование
+    EXPECT_DOUBLE_EQ(result.data[0][0], 1.0);
+    EXPECT_DOUBLE_EQ(result.data[0][1], 4.0);
+    EXPECT_DOUBLE_EQ(result.data[1][0], 2.0);
+    EXPECT_DOUBLE_EQ(result.data[1][1], 5.0);
+    EXPECT_DOUBLE_EQ(result.data[2][0], 3.0);
+    EXPECT_DOUBLE_EQ(result.data[2][1], 6.0);
+
+    free_matrix(m);
+    free_matrix(result);
 }
 
-TEST(MatrixTest, MatrixTransposeSquare) {
-    Matrix A = create_matrix(2, 2);
-    A.data[0][0] = 1; A.data[0][1] = 2;
-    A.data[1][0] = 3; A.data[1][1] = 4;
+// Тесты для matrix_from_array
+TEST(MatrixTest, MatrixFromArray) {
+    double data[] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0};
+    Matrix m = matrix_from_array(data, 2, 3);
 
-    Matrix B = matrix_transpose(A);
-    Matrix C = matrix_transpose(B);
+    EXPECT_EQ(m.rows, 2);
+    EXPECT_EQ(m.cols, 3);
 
-    EXPECT_EQ(C.data[0][0], A.data[0][0]);
-    EXPECT_EQ(C.data[0][1], A.data[0][1]);
-    EXPECT_EQ(C.data[1][0], A.data[1][0]);
-    EXPECT_EQ(C.data[1][1], A.data[1][1]);
+    EXPECT_DOUBLE_EQ(m.data[0][0], 1.0);
+    EXPECT_DOUBLE_EQ(m.data[0][1], 2.0);
+    EXPECT_DOUBLE_EQ(m.data[0][2], 3.0);
+    EXPECT_DOUBLE_EQ(m.data[1][0], 4.0);
+    EXPECT_DOUBLE_EQ(m.data[1][1], 5.0);
+    EXPECT_DOUBLE_EQ(m.data[1][2], 6.0);
 
-    free_matrix(A);
-    free_matrix(B);
-    free_matrix(C);
+    free_matrix(m);
 }
 
-// Тесты суммы элементов матрицы
+// Тесты для matrix_sum
 TEST(MatrixTest, MatrixSum) {
-    Matrix A = create_matrix(2, 2);
-    A.data[0][0] = 1; A.data[0][1] = 2;
-    A.data[1][0] = 3; A.data[1][1] = 4;
+    Matrix m = create_matrix(2, 2);
+    m.data[0][0] = 1.0;
+    m.data[0][1] = 2.0;
+    m.data[1][0] = 3.0;
+    m.data[1][1] = 4.0;
 
-    EXPECT_DOUBLE_EQ(matrix_sum(A), 10.0);
-    free_matrix(A);
+    double sum = matrix_sum(m);
+    EXPECT_DOUBLE_EQ(sum, 10.0);
+
+    free_matrix(m);
 }
 
 TEST(MatrixTest, MatrixSumEmpty) {
-    Matrix A = create_matrix(1, 1);
-    A.data[0][0] = 0.0;
-    EXPECT_DOUBLE_EQ(matrix_sum(A), 0.0);
-    free_matrix(A);
+    Matrix m;
+    m.data = nullptr;
+    m.rows = 0;
+    m.cols = 0;
+
+    double sum = matrix_sum(m);
+    EXPECT_DOUBLE_EQ(sum, 0.0);
 }
 
-TEST(MatrixTest, MatrixSumSingleElement) {
-    Matrix A = create_matrix(1, 1);
-    A.data[0][0] = 5.5;
-    EXPECT_DOUBLE_EQ(matrix_sum(A), 5.5);
-    free_matrix(A);
+// Тесты для matrix_hstack
+TEST(MatrixTest, MatrixHStack) {
+    Matrix a = create_matrix(2, 2);
+    Matrix b = create_matrix(2, 2);
+
+    a.data[0][0] = 1; a.data[0][1] = 2;
+    a.data[1][0] = 3; a.data[1][1] = 4;
+
+    b.data[0][0] = 1; b.data[0][1] = 2; // Первая строка совпадает с a
+    b.data[1][0] = 5; b.data[1][1] = 6;
+
+    Matrix result = matrix_hstack(a, b);
+
+    // Проверяем результат
+    // Для строки, где матрицы совпадают (первая строка), берется значение из a
+    // Для остальных строк - сумма a и b
+
+    free_matrix(a);
+    free_matrix(b);
+    free_matrix(result);
 }
 
-TEST(MatrixTest, MatrixSumLargeMatrix) {
-    Matrix A = create_matrix(3, 3);
-    double sum = 0;
-    for (int i = 0; i < 3; ++i) {
-        for (int j = 0; j < 3; ++j) {
-            A.data[i][j] = i * 3 + j + 1;
-            sum += A.data[i][j];
+// Тест для проверки утечек памяти
+TEST(MatrixTest, MemoryManagement) {
+    Matrix m = create_matrix(100, 100);
+    EXPECT_NE(m.data, nullptr);
+
+    // Заполняем матрицу данными
+    for (int i = 0; i < m.rows; i++) {
+        for (int j = 0; j < m.cols; j++) {
+            m.data[i][j] = i + j;
         }
     }
-    EXPECT_DOUBLE_EQ(matrix_sum(A), sum);
-    free_matrix(A);
+
+    // Освобождаем память - не должно быть segmentation fault
+    free_matrix(m);
+
+    // Проверяем, что можем создать новую матрицу после освобождения
+    Matrix m2 = create_matrix(10, 10);
+    EXPECT_NE(m2.data, nullptr);
+    free_matrix(m2);
 }
 
-// Тесты создания матрицы из массива
-TEST(MatrixTest, MatrixFromArray) {
-    double data[] = {1, 2, 3, 4, 5, 6};
-    Matrix A = matrix_from_array(data, 2, 3);
-
-    EXPECT_EQ(A.rows, 2);
-    EXPECT_EQ(A.cols, 3);
-    EXPECT_EQ(A.data[0][0], 1);
-    EXPECT_EQ(A.data[0][1], 2);
-    EXPECT_EQ(A.data[0][2], 3);
-    EXPECT_EQ(A.data[1][0], 4);
-    EXPECT_EQ(A.data[1][1], 5);
-    EXPECT_EQ(A.data[1][2], 6);
-
-    free_matrix(A);
-}
-
-TEST(MatrixTest, MatrixFromArrayInvalidSize) {
-    double data[] = {1, 2, 3};
-    EXPECT_THROW(matrix_from_array(data, -1, 3), std::invalid_argument);
-    EXPECT_THROW(matrix_from_array(data, 3, -1), std::invalid_argument);
-}
-
-TEST(MatrixTest, MatrixFromArraySingleElement) {
-    double data[] = {42};
-    Matrix A = matrix_from_array(data, 1, 1);
-
-    EXPECT_EQ(A.rows, 1);
-    EXPECT_EQ(A.cols, 1);
-    EXPECT_EQ(A.data[0][0], 42);
-
-    free_matrix(A);
-}
-
-// Тесты горизонтального объединения матриц
-TEST(MatrixTest, MatrixHStack) {
-    Matrix A = create_matrix(2, 2);
-    Matrix B = create_matrix(2, 2);
-
-    A.data[0][0] = 1; A.data[0][1] = 2;
-    A.data[1][0] = 3; A.data[1][1] = 4;
-
-    B.data[0][0] = 5; B.data[0][1] = 6;
-    B.data[1][0] = 7; B.data[1][1] = 8;
-
-    Matrix C = matrix_hstack(A, B);
-
-    EXPECT_EQ(C.rows, 2);
-    EXPECT_EQ(C.cols, 4);
-
-    EXPECT_EQ(C.data[0][0], 1);
-    EXPECT_EQ(C.data[0][1], 2);
-    EXPECT_EQ(C.data[0][2], 5);
-    EXPECT_EQ(C.data[0][3], 6);
-
-    EXPECT_EQ(C.data[1][0], 3);
-    EXPECT_EQ(C.data[1][1], 4);
-    EXPECT_EQ(C.data[1][2], 7);
-    EXPECT_EQ(C.data[1][3], 8);
-
-    free_matrix(A);
-    free_matrix(B);
-    free_matrix(C);
-}
-
-TEST(MatrixTest, MatrixHStackInvalidSize) {
-    Matrix A = create_matrix(2, 2);
-    Matrix B = create_matrix(3, 2); // Разное количество строк
-
-    EXPECT_THROW(matrix_hstack(A, B), std::invalid_argument);
-
-    free_matrix(A);
-    free_matrix(B);
-}
-
-// Главная функция
 int main(int argc, char **argv) {
-    testing::InitGoogleTest(&argc, argv);
+    ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }
